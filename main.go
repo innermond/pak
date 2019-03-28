@@ -76,11 +76,14 @@ func main() {
 	lenboxes := len(boxes)
 	remaining := boxes[:]
 
-	inx, usedAria, boxesAria := 0, 0.0, 0.0
+	inx, usedAria, boxesAria, boxesPerim := 0, 0.0, 0.0, 0.0
 	for lenboxes > 0 {
 		bin := NewBin(width, height, nil)
 		remaining = []*Box{}
 		maxx, maxy := 0.0, 0.0
+		// shrink all aria
+		width -= topleftmargin
+		height -= topleftmargin
 		// pack boxes into bin
 		for _, box := range boxes {
 			if !bin.Insert(box) {
@@ -89,15 +92,40 @@ func main() {
 				continue
 			}
 
-			boxesAria += (box.W * box.H)
-
-			if box.Y+box.H > maxy {
-				maxy = box.Y + box.H
+			if topleftmargin == 0.0 {
+				// all boxes touching top or left edges will need a half expand
+				if box.X == 0.0 && box.Y == 0.0 { // top left box
+					box.W -= cutwidth / 2
+					box.H -= cutwidth / 2
+				} else if box.X == 0.0 && box.Y != 0.0 { // leftmost column
+					box.W -= cutwidth / 2
+					box.Y -= cutwidth / 2
+				} else if box.Y == 0.0 && box.X != 0.0 { // topmost row
+					box.H -= cutwidth / 2
+					box.X -= cutwidth / 2
+				} else if box.X*box.Y != 0.0 { // the other boxes
+					box.X -= cutwidth / 2
+					box.Y -= cutwidth / 2
+				}
+			} else {
+				// no need to adjust W or H but X and Y
+				box.X += topleftmargin
+				box.Y += topleftmargin
 			}
-			if box.X+box.W > maxx {
-				maxx = box.X + box.W
+
+			boxesAria += (box.W * box.H)
+			boxesPerim += 2 * (box.W + box.H)
+
+			if box.Y+box.H-topleftmargin > maxy {
+				maxy = box.Y + box.H - topleftmargin
+			}
+			if box.X+box.W-topleftmargin > maxx {
+				maxx = box.X + box.W - topleftmargin
 			}
 		}
+		// enlarge aria back
+		width += topleftmargin
+		height += topleftmargin
 
 		if modeReportAria == "tight" {
 			maxx = width
@@ -139,10 +167,17 @@ func main() {
 			}
 		}
 	}
+
 	lostAria := usedAria - boxesAria
 	procentAria := boxesAria * 100 / usedAria
 
-	k := 1000.0 * 1000.0
-	fmt.Printf("boxes aria %.2f used aria %.2f lost aria %.2f procent %.2f%%\n",
-		boxesAria/k, usedAria/k, lostAria/k, procentAria)
+	k := 1000.0
+	k2 := k * k
+	boxesAria = boxesAria / k2
+	usedAria = usedAria / k2
+	lostAria = lostAria / k2
+	boxesPerim = boxesPerim / k
+	price := boxesAria*mu + lostAria*ml + boxesPerim*pp + pd
+	fmt.Printf("boxes aria %.2f used aria %.2f lost aria %.2f procent %.2f%% perim %.2f price %.2f\n",
+		boxesAria, usedAria, lostAria, procentAria, boxesPerim, price)
 }
