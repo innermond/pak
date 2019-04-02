@@ -29,6 +29,10 @@ func (b *Base) tryPlaceRectIn(freeRect *FreeSpaceBox, box *Box, rectWidth float6
 		if score.Bigger(bestScore) {
 			box.X = freeRect.X
 			box.Y = freeRect.Y
+			if box.CanRotate && (box.W == rectHeight && box.H == rectWidth) {
+				// box might been rotated on a previous attempt to fit into a free rect
+				box.Rotated = !box.Rotated
+			}
 			box.W = rectWidth
 			box.H = rectHeight
 			box.Packed = true

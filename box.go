@@ -3,8 +3,8 @@ package main
 import "fmt"
 
 type Box struct {
-	W, H, X, Y        float64
-	Packed, CanRotate bool
+	W, H, X, Y                 float64
+	Packed, CanRotate, Rotated bool
 }
 
 func NewBox(w, h float64) *Box {
