@@ -11,16 +11,22 @@ const (
 	svginitfmt = `%s width="%f%s" height="%f%s"`
 	svgns      = `
      xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink">`
+     xmlns:xlink="http://www.w3.org/1999/xlink"`
+	svgnsinkscape = `
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"`
 	vbfmt = `viewBox="%f %f %f %f"`
 
 	emptyclose = "/>\n"
 )
 
-func svgStart(w float64, h float64, unit string) string {
+func svgStart(w float64, h float64, unit string, plain bool) string {
 	s := fmt.Sprintf(svginitfmt, svgtop, w, unit, h, unit) + " " +
-		fmt.Sprintf(vbfmt, 0.0, 0.0, w, h) +
-		svgns + "\n"
+		fmt.Sprintf(vbfmt, 0.0, 0.0, w, h) + svgns
+	if plain == false {
+		s += svgnsinkscape
+	}
+	s += ">\n"
 	return s
 }
 

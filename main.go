@@ -151,7 +151,7 @@ func main() {
 				panic("cannot create file")
 			}
 
-			s := svgStart(width, height, unit)
+			s := svgStart(width, height, unit, plain)
 			si, err := outsvg(bin.Boxes, topleftmargin, plain)
 			if err != nil {
 				f.Close()
