@@ -72,7 +72,7 @@ func main() {
 	dimensions := flag.Args()
 	// if the cut can eat half of its width along cutline
 	// we compensate expanding boxes with an entire cut width
-	boxes := dimString(dimensions, cutwidth)
+	boxes := boxesFromString(dimensions, cutwidth)
 	lenboxes := len(boxes)
 	remaining := boxes[:]
 
@@ -178,6 +178,6 @@ func main() {
 	lostAria = lostAria / k2
 	boxesPerim = boxesPerim / k
 	price := boxesAria*mu + lostAria*ml + boxesPerim*pp + pd
-	fmt.Printf("boxes aria %.2f used aria %.2f lost aria %.2f procent %.2f%% perim %.2f price %.2f\n",
-		boxesAria, usedAria, lostAria, procentAria, boxesPerim, price)
+	fmt.Printf("boxes aria %.2f used aria %.2f lost aria %.2f procent %.2f%% perim %.2f price %.2f remaining boxes %d\n",
+		boxesAria, usedAria, lostAria, procentAria, boxesPerim, price, lenboxes)
 }

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func dimString(dimensions []string, extra float64) (boxes []*Box) {
+func boxesFromString(dimensions []string, extra float64) (boxes []*Box) {
 	for _, dd := range dimensions {
 		d := strings.Split(dd, "x")
 		if len(d) == 2 {
