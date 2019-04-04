@@ -11,7 +11,7 @@ func NewScore(s1, s2 int) *Score {
 }
 
 func NewScoreBlank() *Score {
-	return NewScore(math.MaxInt64, math.MaxInt64)
+	return NewScore(math.MaxInt32, math.MaxInt32)
 }
 
 func (s *Score) Bigger(o *Score) bool {
@@ -31,7 +31,7 @@ func (s *Score) Assign(o *Score) {
 }
 
 func (s *Score) IsBlank() bool {
-	return s.S1 == math.MaxInt64
+	return s.S1 == math.MaxInt32
 }
 
 func (s *Score) DecreaseBy(delta int) {

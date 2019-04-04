@@ -31,7 +31,7 @@ func (pk *Packer) pack(unfiltered []*Box, options *PackerOptions) []*Box {
 		return packed
 	}
 
-	limit := math.MaxInt64
+	limit := math.MaxInt32
 	if options != nil && options.limit != 0 {
 		limit = options.limit
 	}
