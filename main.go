@@ -16,7 +16,7 @@ var (
 	modeReportAria    string
 	tight, supertight bool
 
-	report, output, plain bool
+	report, output, plain, showDim bool
 
 	cutwidth, topleftmargin float64
 	expandtocutwidth        bool
@@ -33,6 +33,7 @@ func param() {
 	flag.BoolVar(&tight, "tight", false, "when true only aria used tighten by height is taken into account")
 	flag.BoolVar(&supertight, "supertight", false, "when true only aria used tighten bu height and width is taken into account")
 	flag.BoolVar(&plain, "inkscape", true, "when false will save svg as inkscape svg")
+	flag.BoolVar(&showDim, "showdim", false, "generate a layer with dimensions \"wxh\" regarding each box")
 	flag.Float64Var(&mu, "mu", 15.0, "used material price per 1 square meter")
 	flag.Float64Var(&ml, "ml", 5.0, "lost material price per 1 square meter")
 	flag.Float64Var(&pp, "pp", 0.25, "perimeter price per 1 linear meter; used for evaluating cuts price")
@@ -48,7 +49,8 @@ func param() {
 			plain = false
 		case "tight":
 			tight = true
-			modeReportAria = "tight"
+		case "showdim":
+			showDim = true
 		case "supertight":
 			supertight = true
 			modeReportAria = "supertight"
@@ -152,7 +154,7 @@ func main() {
 			}
 
 			s := svgStart(width, height, unit, plain)
-			si, err := outsvg(bin.Boxes, topleftmargin, plain)
+			si, err := outsvg(bin.Boxes, topleftmargin, plain, showDim)
 			if err != nil {
 				f.Close()
 				os.Remove(fn)

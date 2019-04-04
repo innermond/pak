@@ -11,7 +11,7 @@ func aproximateHeightText(numchar int, w float64) float64 {
 	return math.Floor(1.5*wchar*100.0) / 100
 }
 
-func outsvg(blocks []*Box, topleftmargin float64, plain bool) (string, error) {
+func outsvg(blocks []*Box, topleftmargin float64, plain bool, showDim bool) (string, error) {
 	if len(blocks) == 0 {
 		return "", errors.New("no blocks")
 	}
@@ -64,24 +64,26 @@ func outsvg(blocks []*Box, topleftmargin float64, plain bool) (string, error) {
 	}
 	gb = svgGroupEnd(gb)
 
-	gt := svgGroupStart("id=\"dimensions\"")
-	if !plain {
-		gt = svgGroupStart("id=\"dimensions\"", "inkscape:label=\"dimensions\"", "inkscape:groupmode=\"layer\"")
-	}
-	for _, blk := range blocks {
-		if blk != nil {
-			x := fmt.Sprintf("%.2fx%.2f", blk.W, blk.H)
-			if blk.Rotated {
-				x += "xR"
-			}
-			y := aproximateHeightText(len(x), blk.W)
-			gt += svgText(blk.X+blk.W/2, blk.Y+blk.H/2+y/3, // y/3 is totally empirical
-				x, "text-anchor:middle;font-size:"+fmt.Sprintf("%.2f", y)+";fill:#000")
-		} else {
-			return "", errors.New("unexpected unfit block")
+	gt := ""
+	if showDim {
+		gt = svgGroupStart("id=\"dimensions\"")
+		if !plain {
+			gt = svgGroupStart("id=\"dimensions\"", "inkscape:label=\"dimensions\"", "inkscape:groupmode=\"layer\"")
 		}
+		for _, blk := range blocks {
+			if blk != nil {
+				x := fmt.Sprintf("%.2fx%.2f", blk.W, blk.H)
+				if blk.Rotated {
+					x += "xR"
+				}
+				y := aproximateHeightText(len(x), blk.W)
+				gt += svgText(blk.X+blk.W/2, blk.Y+blk.H/2+y/3, // y/3 is totally empirical
+					x, "text-anchor:middle;font-size:"+fmt.Sprintf("%.2f", y)+";fill:#000")
+			} else {
+				return "", errors.New("unexpected unfit block")
+			}
+		}
+		gt = svgGroupEnd(gt)
 	}
-	gt = svgGroupEnd(gt)
-
 	return gb + gt, nil
 }
