@@ -75,112 +75,142 @@ func main() {
 	dimensions := flag.Args()
 	// if the cut can eat half of its width along cutline
 	// we compensate expanding boxes with an entire cut width
-	boxes := boxesFromString(dimensions, cutwidth)
-	lenboxes := len(boxes)
-	remaining := boxes[:]
 
-	inx, usedAria, boxesAria, boxesPerim := 0, 0.0, 0.0, 0.0
-	for lenboxes > 0 {
-		bin := NewBin(width, height, nil)
-		remaining = []*Box{}
-		maxx, maxy := 0.0, 0.0
-		// shrink all aria
-		width -= topleftmargin
-		height -= topleftmargin
-		// pack boxes into bin
-		for _, box := range boxes {
-			if !bin.Insert(box) {
-				remaining = append(remaining, box)
-				// cannot insert skyp to next box
-				continue
-			}
-
-			if topleftmargin == 0.0 {
-				// all boxes touching top or left edges will need a half expand
-				if box.X == 0.0 && box.Y == 0.0 { // top left box
-					box.W -= cutwidth / 2
-					box.H -= cutwidth / 2
-				} else if box.X == 0.0 && box.Y != 0.0 { // leftmost column
-					box.W -= cutwidth / 2
-					box.Y -= cutwidth / 2
-				} else if box.Y == 0.0 && box.X != 0.0 { // topmost row
-					box.H -= cutwidth / 2
-					box.X -= cutwidth / 2
-				} else if box.X*box.Y != 0.0 { // the other boxes
-					box.X -= cutwidth / 2
-					box.Y -= cutwidth / 2
-				}
-			} else {
-				// no need to adjust W or H but X and Y
-				box.X += topleftmargin
-				box.Y += topleftmargin
-			}
-
-			boxesAria += (box.W * box.H)
-			boxesPerim += 2 * (box.W + box.H)
-
-			if box.Y+box.H-topleftmargin > maxy {
-				maxy = box.Y + box.H - topleftmargin
-			}
-			if box.X+box.W-topleftmargin > maxx {
-				maxx = box.X + box.W - topleftmargin
-			}
-		}
-		// enlarge aria back
-		width += topleftmargin
-		height += topleftmargin
-
-		if modeReportAria == "tight" {
-			maxx = width
-		} else if modeReportAria != "supertight" {
-			maxx = width
-			maxy = height
-		}
-		usedAria += (maxx * maxy)
-
-		inx++
-
-		if len(remaining) == lenboxes {
-			break
-		}
-		lenboxes = len(remaining)
-		boxes = remaining[:]
-
-		if output {
-			fn := fmt.Sprintf("%s.%d.svg", outname, inx)
-
-			f, err := os.Create(fn)
-			if err != nil {
-				panic("cannot create file")
-			}
-
-			s := svgStart(width, height, unit, plain)
-			si, err := outsvg(bin.Boxes, topleftmargin, plain, showDim)
-			if err != nil {
-				f.Close()
-				os.Remove(fn)
-			} else {
-				s += svgEnd(si)
-
-				_, err = f.WriteString(s)
-				if err != nil {
-					panic(err)
-				}
-				f.Close()
-			}
-		}
+	strategies := map[string]*Base{
+		"BestAreaFit":   &Base{&BestAreaFit{}},
+		"BestLongSide":  &Base{&BestLongSide{}},
+		"BestShortSide": &Base{&BestShortSide{}},
+		"BottomLeft":    &Base{&BottomLeft{}},
 	}
+	wins := map[string][]float64{}
+	winingStrategyName := ""
+	prevDeltaAreas := 0.0
+	var (
+		boxes     []*Box
+		lenboxes  int
+		remaining []*Box
+	)
+	for strategyName, strategy := range strategies {
+		inx, usedArea, boxesArea, boxesPerim := 0, 0.0, 0.0, 0.0
+		boxes = boxesFromString(dimensions, cutwidth)
+		lenboxes = len(boxes)
+		for lenboxes > 0 {
+			bin := NewBin(width, height, strategy)
+			remaining = []*Box{}
+			maxx, maxy := 0.0, 0.0
+			// shrink all aria
+			width -= topleftmargin
+			height -= topleftmargin
+			// pack boxes into bin
+			for _, box := range boxes {
+				if !bin.Insert(box) {
+					remaining = append(remaining, box)
+					// cannot insert skyp to next box
+					continue
+				}
 
-	lostAria := usedAria - boxesAria
-	procentAria := boxesAria * 100 / usedAria
+				if topleftmargin == 0.0 {
+					// all boxes touching top or left edges will need a half expand
+					if box.X == 0.0 && box.Y == 0.0 { // top left box
+						box.W -= cutwidth / 2
+						box.H -= cutwidth / 2
+					} else if box.X == 0.0 && box.Y != 0.0 { // leftmost column
+						box.W -= cutwidth / 2
+						box.Y -= cutwidth / 2
+					} else if box.Y == 0.0 && box.X != 0.0 { // topmost row
+						box.H -= cutwidth / 2
+						box.X -= cutwidth / 2
+					} else if box.X*box.Y != 0.0 { // the other boxes
+						box.X -= cutwidth / 2
+						box.Y -= cutwidth / 2
+					}
+				} else {
+					// no need to adjust W or H but X and Y
+					box.X += topleftmargin
+					box.Y += topleftmargin
+				}
+
+				boxesArea += (box.W * box.H)
+				boxesPerim += 2 * (box.W + box.H)
+
+				if box.Y+box.H-topleftmargin > maxy {
+					maxy = box.Y + box.H - topleftmargin
+				}
+				if box.X+box.W-topleftmargin > maxx {
+					maxx = box.X + box.W - topleftmargin
+				}
+			}
+			// enlarge aria back
+			width += topleftmargin
+			height += topleftmargin
+
+			if modeReportAria == "tight" {
+				maxx = width
+			} else if modeReportAria != "supertight" {
+				maxx = width
+				maxy = height
+			}
+			usedArea += (maxx * maxy)
+
+			inx++
+
+			if len(remaining) == lenboxes {
+				break
+			}
+			lenboxes = len(remaining)
+			boxes = remaining[:]
+
+			if output {
+				fn := fmt.Sprintf("%s.%d.%s.svg", outname, inx, strategyName)
+
+				f, err := os.Create(fn)
+				if err != nil {
+					panic("cannot create file")
+				}
+
+				s := svgStart(width, height, unit, plain)
+				si, err := outsvg(bin.Boxes, topleftmargin, plain, showDim)
+				if err != nil {
+					f.Close()
+					os.Remove(fn)
+				} else {
+					s += svgEnd(si)
+
+					_, err = f.WriteString(s)
+					if err != nil {
+						panic(err)
+					}
+					f.Close()
+				}
+			}
+		}
+		wins[strategyName] = []float64{usedArea, boxesArea, boxesPerim}
+		currDeltaArea := usedArea - boxesArea
+		if currDeltaArea < prevDeltaAreas {
+			winingStrategyName = strategyName
+		}
+		prevDeltaAreas = currDeltaArea
+	}
 
 	k := 1000.0
 	k2 := k * k
-	boxesAria = boxesAria / k2
-	usedAria = usedAria / k2
-	lostAria = lostAria / k2
+
+	for sn, st := range wins {
+		fmt.Printf("%s lost area %.2f\n", sn, st[0]/k2-st[1]/k2)
+	}
+
+	best, ok := wins[winingStrategyName]
+	if !ok {
+		panic("no wining strategy")
+	}
+	usedArea, boxesArea, boxesPerim := best[0], best[1], best[2]
+	lostArea := usedArea - boxesArea
+	procentArea := boxesArea * 100 / usedArea
+	boxesArea = boxesArea / k2
+	usedArea = usedArea / k2
+	lostArea = lostArea / k2
 	boxesPerim = boxesPerim / k
-	price := boxesAria*mu + lostAria*ml + boxesPerim*pp + pd
-	fmt.Printf("boxes aria %.2f used aria %.2f lost aria %.2f procent %.2f%% perim %.2f price %.2f remaining boxes %d\n",
-		boxesAria, usedAria, lostAria, procentAria, boxesPerim, price, lenboxes)
+	price := boxesArea*mu + lostArea*ml + boxesPerim*pp + pd
+	fmt.Printf("strategy %s boxes aria %.2f used aria %.2f lost aria %.2f procent %.2f%% perim %.2f price %.2f remaining boxes %d\n",
+		winingStrategyName, boxesArea, usedArea, lostArea, procentArea, boxesPerim, price, lenboxes)
 }
