@@ -49,6 +49,7 @@ func param() {
 			plain = false
 		case "tight":
 			tight = true
+			modeReportAria = "tight"
 		case "showdim":
 			showDim = true
 		case "supertight":
