@@ -184,7 +184,7 @@ func main() {
 				}
 			}
 		}
-		wins[strategyName] = []float64{usedArea, boxesArea, boxesPerim}
+		wins[strategyName] = []float64{usedArea, boxesArea, boxesPerim, float64(inx)}
 		currDeltaArea := usedArea - boxesArea
 		if currDeltaArea < prevDeltaAreas {
 			winingStrategyName = strategyName
@@ -203,7 +203,7 @@ func main() {
 	if !ok {
 		panic("no wining strategy")
 	}
-	usedArea, boxesArea, boxesPerim := best[0], best[1], best[2]
+	usedArea, boxesArea, boxesPerim, numSheetsUsed := best[0], best[1], best[2], best[3]
 	lostArea := usedArea - boxesArea
 	procentArea := boxesArea * 100 / usedArea
 	boxesArea = boxesArea / k2
@@ -211,6 +211,6 @@ func main() {
 	lostArea = lostArea / k2
 	boxesPerim = boxesPerim / k
 	price := boxesArea*mu + lostArea*ml + boxesPerim*pp + pd
-	fmt.Printf("strategy %s boxes aria %.2f used aria %.2f lost aria %.2f procent %.2f%% perim %.2f price %.2f remaining boxes %d\n",
-		winingStrategyName, boxesArea, usedArea, lostArea, procentArea, boxesPerim, price, lenboxes)
+	fmt.Printf("strategy %s boxes aria %.2f used aria %.2f lost aria %.2f procent %.2f%% perim %.2f price %.2f remaining boxes %d %s sheets used %.0f\n",
+		winingStrategyName, boxesArea, usedArea, lostArea, procentArea, boxesPerim, price, lenboxes, BoxCode(boxes), numSheetsUsed)
 }
