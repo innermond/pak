@@ -1,4 +1,4 @@
-package main
+package pak
 
 type ScoreBoard struct {
 	entries []*ScoreBoardEntry

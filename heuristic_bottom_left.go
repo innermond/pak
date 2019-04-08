@@ -1,4 +1,4 @@
-package main
+package pak
 
 type BottomLeft struct{}
 

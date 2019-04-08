@@ -1,4 +1,4 @@
-package main
+package pak
 
 type Scorer interface {
 	calculateScore(freeRect *FreeSpaceBox, rectWidth, rectHeight float64) *Score
